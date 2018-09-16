@@ -1,0 +1,3 @@
+[submodule "third_party/cryptoTools"]
+	path = third_party/cryptoTools
+	url = https://github.com/ladnir/cryptoTools.git

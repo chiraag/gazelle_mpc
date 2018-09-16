@@ -1,0 +1,68 @@
+# This file is based on the PALISADE Makefile
+
+CORESRCDIR := src
+COREBINDIR := src/bin
+CORETESTDIR := src/unittest
+COREDEMODIR := src/demo
+
+CORESOURCES := $(shell find $(CORESRCDIR)/lib -name '*.cpp' ! -name '*.pb.cpp') 
+COREUNITSOURCES := $(wildcard $(CORESRCDIR)/unittest/*.cpp)
+COREDEMOSOURCES := $(shell find $(CORESRCDIR)/demo -name '*.cpp' ! -name '*.pb.cpp') 
+
+COREOBJECTS := $(patsubst $(CORESRCDIR)/%,$(COREBINDIR)/%,$(patsubst %.cpp,%.o,$(CORESOURCES)))
+COREUNITOBJECTS := $(patsubst $(CORESRCDIR)/%,$(COREBINDIR)/%,$(patsubst %.cpp,%.o,$(COREUNITSOURCES)))
+COREUNITOBJECTS += test/include/gtest/gtest-all.o
+COREDEMOOBJECTS := $(patsubst $(CORESRCDIR)/%,$(COREBINDIR)/%,$(patsubst %.cpp,%.o,$(COREDEMOSOURCES)))
+
+TEST_TARGET := $(EXTTESTDIR)/tests$(EXESUFFIX)
+
+-include $(COREOBJECTS:.o=.d)
+-include $(COREUNITOBJECTS:.o=.d)
+-include $(COREDEMOOBJECTS:.o=.d)
+
+.PHONY:allcore
+allcore: $(EXTLIBDIR)/$(CORELIB) allcoredemos
+
+allcoredemos: $(EXTLIBDIR)/$(CORELIB) $(patsubst $(COREBINDIR)/demo/%,bin/demo/%,$(patsubst %.o,%$(EXESUFFIX),$(COREDEMOOBJECTS)))
+
+bin/demo/%$(EXESUFFIX): src/bin/demo/%.o $(EXTLIBDIR)/$(CORELIB)
+	@mkdir -p $(@D)
+	$(CC) -o $@ $^ $(EXTLIB) $(LDFLAGS) -lgazelle -L$(BOOST_LIBDIR)
+
+#this builds the shared library out of the objects 
+$(EXTLIBDIR)/$(CORELIB): $(COREOBJECTS)
+	@echo " -- core:linking $@ from COREOBJECTS"
+	mkdir -p $(EXTLIBDIR)
+	$(CC) $(LIBCMD) -o $@ $(COREOBJECTS) $(TEST_LIB) -lcryptoTools -lmiracl -lboost_system -lboost_thread 
+# $(CC) $(LIBCMD) -o $@ $(COREOBJECTS) $(TEST_LIB) -fsanitize-address -lcryptoTools -lmiracl -lboost_system -lboost_thread 
+
+### #this builds the individual objects that make up the library .
+.PRECIOUS: $(COREBINDIR)/%
+$(COREBINDIR)/%:
+	@if [ "$(suffix $@)" = ".o" ] ;   \
+	then  \
+		mkdir -p $(@D)  ;\
+		echo $(CC) $(CPPFLAGS) $(INC) -c -o $@ $(patsubst $(COREBINDIR)/%,$(CORESRCDIR)/%,$(patsubst %.o,%.cpp,$@))  ;\
+		$(CC) -MM $(CPPFLAGS) $(INC) $(patsubst $(COREBINDIR)/%,$(CORESRCDIR)/%,$(patsubst %.o,%.cpp,$@)) > $(patsubst %.o,%.d,$@) ;\
+		mv -f $(patsubst %.o,%.d,$@) $(patsubst %.o,%.d.tmp,$@)  ;\
+		sed -e 's|.*\.o:|$(COREBINDIR)/$*:|' < $(patsubst %.o,%.d.tmp,$@) > $(patsubst %.o,%.d,$@)  ;\
+		rm -f $(patsubst %.o,%.d.tmp,$@)  ; \
+		$(CC) $(CPPFLAGS) $(INC) -c -o $@ $(patsubst $(COREBINDIR)/%,$(CORESRCDIR)/%,$(patsubst %.o,%.cpp,$@))  ;\
+	fi 
+
+#this target is used to cleanup, it is called from the top Makefile
+.PHONY: cleancore 
+
+cleancore: 
+	$(RM) -fr $(COREBINDIR) $(EXTLIBDIR)/$(CORELIB) `dirname $(TEST_TARGET)` bin/demo
+
+# this links test executable  from objects in the test build directory
+$(TEST_TARGET): $(COREUNITOBJECTS) $(EXTLIBDIR)/$(CORELIB) 
+	@mkdir -p `dirname $(TEST_TARGET)`
+	$(CC) -o $(TEST_TARGET) $^ $(EXTLIB) $(LDFLAGS) $(TEST_LIB) 
+
+#used to run tests from make
+.PHONY: testcore
+testcore: $(TEST_TARGET)
+	$(TEST_TARGET)
+
