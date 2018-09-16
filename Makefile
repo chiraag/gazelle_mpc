@@ -45,9 +45,9 @@ MIRACL_LIBDIR := third_party/cryptoTools/thirdparty/linux/miracl/miracl/source
 MIRACL_INCDIR := third_party/cryptoTools/thirdparty/linux/miracl
 LIBCMD += -L$(MIRACL_LIBDIR)
 
-BOOST_LIBDIR := third_party/cryptoTools/thirdparty/linux/boost/stage/lib/
-BOODT_INCDIR := third_party/cryptoTools/thirdparty/linux/boost
-LIBCMD += -L$(BOOST_LIBDIR)
+# BOOST_LIBDIR := third_party/cryptoTools/thirdparty/linux/boost/stage/lib/
+# BOODT_INCDIR := third_party/cryptoTools/thirdparty/linux/boost
+# LIBCMD += -L$(BOOST_LIBDIR)
 
 CT_LIBDIR := third_party/cryptoTools/lib
 CT_INCDIR := third_party/cryptoTools
@@ -70,7 +70,8 @@ $(objects) : %.o : %.cpp
 #EXTLIB := -L$(EXTLIBDIR) $(TEST_LIB) -pg ## include profiling
 EXTLIB := -L$(EXTLIBDIR) $(TEST_LIB) ## no-profiling
 
-INC := -I src/lib -I test -I $(CT_INCDIR) -I $(MIRACL_INCDIR)  -I $(BOODT_INCDIR)
+INC := -I src/lib -I test -I $(CT_INCDIR) -I $(MIRACL_INCDIR)
+# INC += -I $(BOODT_INCDIR)
 
 #the name of the shared object library
 CORELIB := libgazelle$(LIBSUFFIX)

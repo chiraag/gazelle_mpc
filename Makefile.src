@@ -27,7 +27,8 @@ allcoredemos: $(EXTLIBDIR)/$(CORELIB) $(patsubst $(COREBINDIR)/demo/%,bin/demo/%
 
 bin/demo/%$(EXESUFFIX): src/bin/demo/%.o $(EXTLIBDIR)/$(CORELIB)
 	@mkdir -p $(@D)
-	$(CC) -o $@ $^ $(EXTLIB) $(LDFLAGS) -lgazelle -L$(BOOST_LIBDIR)
+	$(CC) -o $@ $^ $(EXTLIB) $(LDFLAGS) -lgazelle
+# $(CC) -o $@ $^ $(EXTLIB) $(LDFLAGS) -lgazelle -L$(BOOST_LIBDIR)
 
 #this builds the shared library out of the objects 
 $(EXTLIBDIR)/$(CORELIB): $(COREOBJECTS)

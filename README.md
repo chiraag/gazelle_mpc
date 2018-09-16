@@ -9,8 +9,8 @@ This was last tested on Ubuntu 16.04 LTS and 17.10
   sudo apt-get install g++ nasm cmake libboost-all-dev
   
   # Clone this repo
-  git clone [path to this repo]
-  cd gazelle
+  git clone https://github.com/chiraag/gazelle_mpc
+  cd gazelle_mpc
   git submodule update --init --recursive
   
   # Compile miracl for OSU cryptotools
